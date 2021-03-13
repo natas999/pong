@@ -115,6 +115,9 @@ function love.load()
     -- 3. 'play' (the ball is in play, bouncing between paddles)
     -- 4. 'done' (the game is over, with a victor, ready for restart)
     gameState = 'start'
+    player1Auto = false;
+    showDebug = false;
+    ballYExp = 0;
 end
 
 --[[
@@ -229,7 +232,19 @@ function love.update(dt)
     -- paddles can move no matter what state we're in
     --
     -- player 1
-    if love.keyboard.isDown('w') then
+    if (player1Auto and gameState == 'play' and ball.dx < 0) then
+        ballYExp = ball.y - ((ball.x - player1.x - player1.width) / ball.dx) * ball.dy
+        if (ballYExp > VIRTUAL_HEIGHT or ballYExp < 0) then
+            ballYExp = ball.y
+        end
+        if (player1.y + player1.height / 2 < ballYExp) then
+            player1.dy = PADDLE_SPEED
+        elseif (player1.y > ballYExp) then
+            player1.dy = -PADDLE_SPEED
+        else
+            player1.dy = 0
+        end
+    elseif love.keyboard.isDown('w') then
         player1.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('s') then
         player1.dy = PADDLE_SPEED
@@ -292,6 +307,10 @@ function love.keypressed(key)
                 servingPlayer = 1
             end
         end
+    elseif key == 'a' then
+        player1Auto = not player1Auto;
+    elseif key == 'd' then
+        showDebug = not showDebug;
     end
 end
 
@@ -326,6 +345,21 @@ function love.draw()
             0, 10, VIRTUAL_WIDTH, 'center')
         love.graphics.setFont(smallFont)
         love.graphics.printf('Press Enter to restart!', 0, 30, VIRTUAL_WIDTH, 'center')
+    end
+
+    if player1Auto then
+        love.graphics.setFont(smallFont)
+        love.graphics.setColor(128/255, 128/255, 128/255, 255/255)
+        love.graphics.print('Player 1 Auto play', 20, 30)
+        love.graphics.setColor(255, 255, 255, 255)
+    end
+
+    if showDebug then
+        love.graphics.setFont(smallFont)
+        love.graphics.setColor(128/255, 128/255, 128/255, 255/255)
+        love.graphics.print('ballYExp: ' .. tostring(ballYExp), 20, 40)
+        love.graphics.print('player1Y: ' .. tostring(player1.y), 20, 50)
+        love.graphics.setColor(255, 255, 255, 255)
     end
 
     -- show the score before ball is rendered so it can move over the text
