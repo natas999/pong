@@ -116,6 +116,7 @@ function love.load()
     -- 4. 'done' (the game is over, with a victor, ready for restart)
     gameState = 'start'
     player1Auto = false;
+    player2Auto = false;
     showDebug = false;
     ballYExp = 0;
 end
@@ -253,7 +254,19 @@ function love.update(dt)
     end
 
     -- player 2
-    if love.keyboard.isDown('up') then
+    if (player2Auto and gameState == 'play' and ball.dx > 0) then
+        ballYExp = ball.y + ((player2.x - ball.x) / ball.dx) * ball.dy
+        if (ballYExp > VIRTUAL_HEIGHT or ballYExp < 0) then
+            ballYExp = ball.y
+        end
+        if (player2.y + player2.height / 2 < ballYExp) then
+            player2.dy = PADDLE_SPEED
+        elseif (player2.y > ballYExp) then
+            player2.dy = -PADDLE_SPEED
+        else
+            player2.dy = 0
+        end
+    elseif love.keyboard.isDown('up') then
         player2.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('down') then
         player2.dy = PADDLE_SPEED
@@ -309,6 +322,8 @@ function love.keypressed(key)
         end
     elseif key == 'a' then
         player1Auto = not player1Auto;
+    elseif key == 'left' then
+        player2Auto = not player2Auto;
     elseif key == 'd' then
         showDebug = not showDebug;
     end
@@ -354,11 +369,19 @@ function love.draw()
         love.graphics.setColor(255, 255, 255, 255)
     end
 
+    if player2Auto then
+        love.graphics.setFont(smallFont)
+        love.graphics.setColor(128/255, 128/255, 128/255, 255/255)
+        love.graphics.print('Player 2 Auto play', VIRTUAL_WIDTH - 100, 30)
+        love.graphics.setColor(255, 255, 255, 255)
+    end
+
     if showDebug then
         love.graphics.setFont(smallFont)
         love.graphics.setColor(128/255, 128/255, 128/255, 255/255)
         love.graphics.print('ballYExp: ' .. tostring(ballYExp), 20, 40)
         love.graphics.print('player1Y: ' .. tostring(player1.y), 20, 50)
+        love.graphics.print('player2Y: ' .. tostring(player2.y), 20, 60)
         love.graphics.setColor(255, 255, 255, 255)
     end
 
